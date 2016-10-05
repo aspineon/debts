@@ -1,4 +1,4 @@
-package io.pillopl.eventsource.debts.events;
+package io.pillopl.eventsource.debts.event;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -10,13 +10,12 @@ import java.util.UUID;
         include = JsonTypeInfo.As.PROPERTY,
         property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(name = PaymentExpected.TYPE, value = PaymentExpected.class),
-        @JsonSubTypes.Type(name = PaymentIsDue.TYPE, value = PaymentIsDue.class),
-        @JsonSubTypes.Type(name = PaymentReceived.TYPE, value = PaymentReceived.class)
+        @JsonSubTypes.Type(name = "item.ordered", value = PaymentExpected.class),
+        @JsonSubTypes.Type(name = "item.payment.timeout", value = PaymentIsDue.class),
+        @JsonSubTypes.Type(name = "item.paid", value = PaymentReceived.class)
 })
 public interface Event {
 
-    String type();
     UUID uuid();
 }
 

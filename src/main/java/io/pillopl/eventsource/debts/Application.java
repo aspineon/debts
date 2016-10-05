@@ -1,6 +1,6 @@
 package io.pillopl.eventsource.debts;
 
-import io.pillopl.eventsource.debts.events.Event;
+import io.pillopl.eventsource.debts.event.Event;
 import io.pillopl.eventsource.debts.payment.PaymentsUpdater;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

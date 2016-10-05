@@ -1,8 +1,8 @@
 package io.pillopl.eventsource.debts.integration.payment
 
-import io.pillopl.eventsource.debts.events.PaymentExpected
-import io.pillopl.eventsource.debts.events.PaymentReceived
-import io.pillopl.eventsource.debts.events.PaymentIsDue
+import io.pillopl.eventsource.debts.event.PaymentExpected
+import io.pillopl.eventsource.debts.event.PaymentReceived
+import io.pillopl.eventsource.debts.event.PaymentIsDue
 import io.pillopl.eventsource.debts.integration.IntegrationSpec
 import io.pillopl.eventsource.debts.payment.JdbcUpdater
 import io.pillopl.eventsource.debts.payment.Payment
@@ -13,6 +13,7 @@ import spock.lang.Subject
 
 import java.time.Instant
 
+import static java.math.BigDecimal.TEN
 import static java.time.Instant.parse
 
 class PaymentsUpdaterIntegrationSpec extends IntegrationSpec {
@@ -31,13 +32,13 @@ class PaymentsUpdaterIntegrationSpec extends IntegrationSpec {
         given:
             UUID itemUUID = UUID.randomUUID()
         when:
-            paymentExpected(itemUUID, PAYMENT_TIMEOUT)
+            paymentExpected(itemUUID, PAYMENT_TIMEOUT, TEN)
         then:
             Payment payment = readModel.getPaymentBy(itemUUID)
-            payment.uuid == itemUUID.toString()
+            payment.item_uuid == itemUUID.toString()
             payment.status == 'PENDING'
-            payment.when_paid == null
-            payment.when_payment_timeout.toInstant() == PAYMENT_TIMEOUT
+            payment.arrived == null
+            payment.deadline.toInstant() == PAYMENT_TIMEOUT
             payment.when_payment_marked_as_missing == null
     }
 
@@ -50,10 +51,10 @@ class PaymentsUpdaterIntegrationSpec extends IntegrationSpec {
             paymentExpected(itemUUID, PAYMENT_TIMEOUT)
         then:
             Payment payment = readModel.getPaymentBy(itemUUID)
-            payment.when_payment_timeout.toInstant() == PAYMENT_TIMEOUT
+            payment.deadline.toInstant() == PAYMENT_TIMEOUT
     }
 
-    def 'should update payment as received'() {
+    def 'should update payment as arrived'() {
         given:
             UUID itemUUID = UUID.randomUUID()
         when:
@@ -62,10 +63,10 @@ class PaymentsUpdaterIntegrationSpec extends IntegrationSpec {
             paymentReceived(itemUUID, ANY_OTHER_TIME)
         then:
             Payment payment = readModel.getPaymentBy(itemUUID)
-            payment.when_paid.toInstant() == ANY_OTHER_TIME
+            payment.arrived.toInstant() == ANY_OTHER_TIME
     }
 
-    def 'updating as recevied should be idempotent'() {
+    def 'updating as arrived should be idempotent'() {
         given:
             UUID itemUUID = UUID.randomUUID()
         when:
@@ -76,7 +77,7 @@ class PaymentsUpdaterIntegrationSpec extends IntegrationSpec {
             paymentReceived(itemUUID, YET_ANOTHER_TIME)
         then:
             Payment payment = readModel.getPaymentBy(itemUUID)
-            payment.when_paid.toInstant() == ANY_OTHER_TIME
+            payment.arrived.toInstant() == ANY_OTHER_TIME
     }
 
     def 'should update payment as due'() {
@@ -106,8 +107,8 @@ class PaymentsUpdaterIntegrationSpec extends IntegrationSpec {
             payment.when_payment_marked_as_missing.toInstant() == ANY_OTHER_TIME
     }
 
-    void paymentExpected(UUID uuid, Instant paymentTimeout = ANY_TIME_LATER) {
-        sink.input().send(new GenericMessage<>(new PaymentExpected(uuid, paymentTimeout)))
+    void paymentExpected(UUID uuid, Instant paymentTimeout = ANY_TIME_LATER, BigDecimal price =  TEN) {
+        sink.input().send(new GenericMessage<>(new PaymentExpected(uuid, paymentTimeout, price)))
     }
 
     void paymentReceived(UUID uuid, Instant when) {

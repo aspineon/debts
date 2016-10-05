@@ -1,4 +1,4 @@
-package io.pillopl.eventsource.debts.events;
+package io.pillopl.eventsource.debts.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,15 +12,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class PaymentReceived implements Event {
 
-    public static final String TYPE = "item.paid";
-
     private UUID uuid;
     private Instant when;
-
-    @Override
-    public String type() {
-        return TYPE;
-    }
 
     @Override
     public UUID uuid() {

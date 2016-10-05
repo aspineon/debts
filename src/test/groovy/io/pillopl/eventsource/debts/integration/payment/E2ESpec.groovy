@@ -1,8 +1,8 @@
 package io.pillopl.eventsource.debts.integration.payment
 
-import io.pillopl.eventsource.debts.events.PaymentExpected
-import io.pillopl.eventsource.debts.events.PaymentReceived
-import io.pillopl.eventsource.debts.events.PaymentIsDue
+import io.pillopl.eventsource.debts.event.PaymentExpected
+import io.pillopl.eventsource.debts.event.PaymentReceived
+import io.pillopl.eventsource.debts.event.PaymentIsDue
 import io.pillopl.eventsource.debts.integration.IntegrationSpec
 import io.pillopl.eventsource.debts.payment.PaymentsTimeoutChecker
 import org.springframework.beans.factory.annotation.Autowired
@@ -81,8 +81,8 @@ class E2ESpec extends IntegrationSpec {
     }
 
 
-    void paymentIsExpected(UUID uuid, Instant paymentTimeout = ANY_TIME) {
-        sink.input().send(new GenericMessage<>(new PaymentExpected(uuid, paymentTimeout)))
+    void paymentIsExpected(UUID uuid, Instant paymentTimeout = ANY_TIME, BigDecimal price = BigDecimal.TEN) {
+        sink.input().send(new GenericMessage<>(new PaymentExpected(uuid, paymentTimeout, price)))
     }
 
     void paymentReceived(UUID uuid, Instant when) {

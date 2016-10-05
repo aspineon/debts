@@ -17,7 +17,7 @@ import static java.util.UUID.fromString;
 @Slf4j
 public class PaymentsTimeoutChecker {
 
-    private static final String MISSING_PAYMENTS_SQL_QUERY = "SELECT uuid FROM payments WHERE when_payment_timeout <= ? AND status = 'PENDING'";
+    private static final String MISSING_PAYMENTS_SQL_QUERY = "SELECT item_uuid FROM payments WHERE deadline <= ? AND status = 'PENDING'";
 
     private final PublishMissingPaymentChannel channel;
     private final JdbcTemplate jdbcTemplate;

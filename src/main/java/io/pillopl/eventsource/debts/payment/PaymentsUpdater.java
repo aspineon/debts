@@ -1,9 +1,9 @@
 package io.pillopl.eventsource.debts.payment;
 
-import io.pillopl.eventsource.debts.events.Event;
-import io.pillopl.eventsource.debts.events.PaymentExpected;
-import io.pillopl.eventsource.debts.events.PaymentReceived;
-import io.pillopl.eventsource.debts.events.PaymentIsDue;
+import io.pillopl.eventsource.debts.event.Event;
+import io.pillopl.eventsource.debts.event.PaymentExpected;
+import io.pillopl.eventsource.debts.event.PaymentReceived;
+import io.pillopl.eventsource.debts.event.PaymentIsDue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +20,7 @@ public class PaymentsUpdater {
     public void handle(Event event) {
         if (event instanceof PaymentExpected) {
             final PaymentExpected paymentExpected = (PaymentExpected) event;
-            jdbcReadModelUpdater.updateOrCretePendingPayment(event.uuid(), paymentExpected.getPaymentTimeoutDate());
+            jdbcReadModelUpdater.updateOrCretePendingPayment(event.uuid(), paymentExpected.getPaymentTimeoutDate(), paymentExpected.getPrice());
         } else if (event instanceof PaymentReceived) {
             final PaymentReceived paymentReceived = (PaymentReceived) event;
             jdbcReadModelUpdater.updatePaymentAsPaid(event.uuid(), paymentReceived.getWhen());
