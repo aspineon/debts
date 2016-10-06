@@ -1,8 +1,5 @@
 package io.pillopl.eventsource.debts.integration.payment
 
-import io.pillopl.eventsource.debts.event.PaymentExpected
-import io.pillopl.eventsource.debts.event.PaymentReceived
-import io.pillopl.eventsource.debts.event.PaymentIsDue
 import io.pillopl.eventsource.debts.integration.IntegrationSpec
 import io.pillopl.eventsource.debts.payment.PaymentsTimeoutChecker
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,6 +14,7 @@ import spock.util.concurrent.PollingConditions
 import java.time.Instant
 import java.util.concurrent.BlockingQueue
 
+import static java.math.BigDecimal.TEN
 import static java.time.Instant.parse
 
 class E2ESpec extends IntegrationSpec {
@@ -42,7 +40,7 @@ class E2ESpec extends IntegrationSpec {
     def 'when deadline reached should send command about item payment timeout to output channel'() {
         given:
             UUID itemUUID = UUID.randomUUID()
-            paymentIsExpected(itemUUID, TIMEOUT_FAR_IN_THE_PAST)
+            paymentExpected(itemUUID, TIMEOUT_FAR_IN_THE_PAST)
         when:
             paymentsTimeoutChecker.run()
         then:
@@ -56,7 +54,7 @@ class E2ESpec extends IntegrationSpec {
     def 'should not send information when deadline not reached'() {
         given:
             UUID itemUUID = UUID.randomUUID()
-            paymentIsExpected(itemUUID, TIMEOUT_FAR_IN_THE_FUTURE)
+            paymentExpected(itemUUID, TIMEOUT_FAR_IN_THE_FUTURE)
         when:
             paymentsTimeoutChecker.run()
         then:
@@ -66,7 +64,7 @@ class E2ESpec extends IntegrationSpec {
     def 'should not send information when payment already marked as due'() {
         given:
             UUID itemUUID = UUID.randomUUID()
-            paymentIsExpected(itemUUID, TIMEOUT_FAR_IN_THE_PAST)
+            paymentExpected(itemUUID, TIMEOUT_FAR_IN_THE_PAST)
         and:
             paymentIsDue(itemUUID, ANY_TIME)
         when:
@@ -81,16 +79,29 @@ class E2ESpec extends IntegrationSpec {
     }
 
 
-    void paymentIsExpected(UUID uuid, Instant paymentTimeout = ANY_TIME, BigDecimal price = BigDecimal.TEN) {
-        sink.input().send(new GenericMessage<>(new PaymentExpected(uuid, paymentTimeout, price)))
+    void paymentExpected(UUID uuid, Instant paymentTimeout = ANY_TIME, BigDecimal price =  TEN) {
+        sink.input().send(new GenericMessage<>(itemOrderedInJson(uuid, paymentTimeout, price)))
     }
 
     void paymentReceived(UUID uuid, Instant when) {
-        sink.input().send(new GenericMessage<>(new PaymentReceived(uuid, when)))
+        sink.input().send(new GenericMessage<>(itemPaidInJson(uuid, when)))
     }
 
     void paymentIsDue(UUID uuid, Instant when) {
-        sink.input().send(new GenericMessage<>(new PaymentIsDue(uuid, when)))
+        sink.input().send(new GenericMessage<>(itemTimeoutInJson(uuid, when)))
     }
+
+    private static String itemOrderedInJson(UUID uuid, Instant paymentTimeout, BigDecimal price) {
+        return "{\"type\":\"item.ordered\",\"uuid\":\"$uuid\",\"paymentTimeoutDate\":\"$paymentTimeout\",\"price\":$price}"
+    }
+
+    private static String itemPaidInJson(UUID uuid, Instant when) {
+        return "{\"type\":\"item.paid\",\"uuid\":\"$uuid\",\"when\":\"$when\"}"
+    }
+
+    private static String itemTimeoutInJson(UUID uuid, Instant when) {
+        return "{\"type\":\"item.payment.timeout\",\"uuid\":\"$uuid\",\"when\":\"$when\"}"
+    }
+
 
 }

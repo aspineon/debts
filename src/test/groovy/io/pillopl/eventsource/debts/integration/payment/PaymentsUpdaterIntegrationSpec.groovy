@@ -1,8 +1,5 @@
 package io.pillopl.eventsource.debts.integration.payment
 
-import io.pillopl.eventsource.debts.event.PaymentExpected
-import io.pillopl.eventsource.debts.event.PaymentReceived
-import io.pillopl.eventsource.debts.event.PaymentIsDue
 import io.pillopl.eventsource.debts.integration.IntegrationSpec
 import io.pillopl.eventsource.debts.payment.JdbcUpdater
 import io.pillopl.eventsource.debts.payment.Payment
@@ -108,15 +105,27 @@ class PaymentsUpdaterIntegrationSpec extends IntegrationSpec {
     }
 
     void paymentExpected(UUID uuid, Instant paymentTimeout = ANY_TIME_LATER, BigDecimal price =  TEN) {
-        sink.input().send(new GenericMessage<>(new PaymentExpected(uuid, paymentTimeout, price)))
+        sink.input().send(new GenericMessage<>(itemOrderedInJson(uuid, paymentTimeout, price)))
     }
 
     void paymentReceived(UUID uuid, Instant when) {
-        sink.input().send(new GenericMessage<>(new PaymentReceived(uuid, when)))
+        sink.input().send(new GenericMessage<>(itemPaidInJson(uuid, when)))
     }
 
     void paymentIsDue(UUID uuid, Instant when) {
-        sink.input().send(new GenericMessage<>(new PaymentIsDue(uuid, when)))
+        sink.input().send(new GenericMessage<>(itemTimeoutInJson(uuid, when)))
+    }
+
+    private static String itemOrderedInJson(UUID uuid, Instant paymentTimeout, BigDecimal price) {
+        return "{\"type\":\"item.ordered\",\"uuid\":\"$uuid\",\"paymentTimeoutDate\":\"$paymentTimeout\",\"price\":$price}"
+    }
+
+    private static String itemPaidInJson(UUID uuid, Instant when) {
+        return "{\"type\":\"item.paid\",\"uuid\":\"$uuid\",\"when\":\"$when\"}"
+    }
+
+    private static String itemTimeoutInJson(UUID uuid, Instant when) {
+        return "{\"type\":\"item.payment.timeout\",\"uuid\":\"$uuid\",\"when\":\"$when\"}"
     }
 
 }

@@ -13,7 +13,7 @@ import java.util.Map;
 @RestController
 public class PaymentsController {
 
-    private static final String SELECT_FROM_PAYMENTS = "select uuid, status, amount, arrived, deadline, when_payment_marked_as_missing from payments";
+    private static final String SELECT_FROM_PAYMENTS = "select * from payments";
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
